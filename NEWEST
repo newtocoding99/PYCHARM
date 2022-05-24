@@ -1,0 +1,313 @@
+from queue import Empty
+import tkinter as tk
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+
+import sys
+
+
+
+import datetime as dt
+import csv
+from pathlib import Path
+import PIL.Image
+import PIL.ImageDraw
+import PIL.ImageTk
+import numpy as np
+import cv2
+import pandas as pd
+import copy
+import ast
+
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+
+MAX_HEIGHT = 1024
+MAX_WIDTH = 1024
+
+CSV_LABELS_KEY = "New Labels"
+CSV_IMAGE_NAME = "FolderNum_SeriesNum"
+CSV_CORRECT_BOUNDING_BOX = "ground_truth_bbox"
+STUDY_FOLD_NUM = "studyFoldNum"
+SERIES_NUM = "seriesNum"
+SLICE_NUM = "sliceNum"
+
+ffp_root_csv = '/users/poojaps/Desktop/'
+fn_csv = 'T2_recistTrain3DTest_withModelPreds_v3.csv'
+ffp_csv = ffp_root_csv + '/' + fn_csv
+
+#ffp_csv = '/users/poojaps/Desktop/T2_recistTrain3DTest_withModelPreds_v3.csv'
+
+
+IMAGES_PATH = "V:/users/Tejas/LNMRI/images_v3/"
+
+pd_split2read = 'test'
+pd_study_series_num = 'studyFoldNum_seriesNum'
+
+
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+
+class App(QWidget):
+
+    def __init__(self, ffp_csv, master=None):
+
+        super(QWidget, self).__init__(master)  # python3 style
+
+        # read csv file with pandas
+        self.orig_df = self.read_csv(ffp_csv)
+
+        # make copy of csv df
+        self.df = self.orig_df.copy()
+
+        # get the data split
+        self.df_split = self.df[self.df['set'] == pd_split2read]
+
+        # print(self.df_split)
+        print(self.df_split.columns.to_list())
+
+        print(list(self.df_split.columns.values))
+
+        """
+        ## =================================================
+        # create a master dictionary to store:
+            # study/series/slice indicies
+            # image
+            # GT bbox
+            # predicted bboxes
+            # clicked bboxes
+            # drawn bboxes 
+        """
+        self.d_master_studySeriesSlice = self.create_master_dict_from_df(self.df_split)
+
+        # # test
+        # scan_to_select = '00948_13' # '05871_5'
+        # for slice_k in self.d_master_studySeriesSlice[scan_to_select]:
+        #     print(self.d_master_studySeriesSlice[scan_to_select][slice_k]['df_rows'])
+
+        """
+        ## =================================================
+        Initialize variables 
+        """
+
+        # initialize dict of ALL slices in studySeries
+        self.d_curr_studySeries_ALL_slices = None
+        # initialize dict of current slice in studySeries
+        self.d_curr_studySeries_curr_slice = None
+
+        # initialize list of slice name keys for current studySeries
+        self.list_slice_keys_in_curr_studySeries = None
+
+        # idx of current volume
+        self.curr_studySeries_idx = 0
+        # name of the current studySeries
+        self.curr_studySeries_name = 0
+        # index of current slice in current studySeries
+        self.curr_studySeries_curr_slice_idx = 0
+        # name of current slice in current studySeries
+        self.curr_studySeries_curr_slice_key = None
+        # indicies of all annotated slices
+        self.curr_studySeries_idx_unique_annotated_slices = None
+
+        # coordinates of dragged box
+        self.current_drag_box = []
+
+        # copy of image
+        self.image_with_GT_bbox_overlay = None
+
+        # ==========================
+        # bbox colors and thickness
+
+        # colors for boxes
+        self.gt_color_magenta = '#FF00FF'  # magenta #FF00FF (255, 0, 255)
+        self.gt_color_cyan = '#00FFFF'  # cyan #00FFFF (0, 255, 255)
+        self.pred_color_red = '#FF0000'  # red #FF0000 (255, 0, 0)
+        self.click_to_good_color_green = '#00FF00'  # green #00FF00 (0, 255, 0)
+        self.drag_box_color_gold = '#FFD700'  # gold #FFD700 (255, 215, 0)
+
+        # thickness of drawn boxes
+        self.thickness = 2  # line thickness
+
+        # ==========================
+        # timer stuff
+
+        # total time for experiment
+        self.exp_time_total = dt.datetime.today()
+
+        # time for current volume
+        self.curr_vol_time = dt.datetime.today()
+
+        self.curr_vol_eval_time = 0
+
+        """
+        ## =================================================
+        GUI initialization and development
+        """
+
+        self.master.title("Experiment + annotation")
+        self.drawing_enabled = True
+
+        #self.setWindowTitle("Slideshow")
+
+        # set geometry of the window
+        self.setGeometry(100, 100, 500, 300)
+        main_layout = QVBoxLayout(self)
+
+        top_layout = QHBoxLayout()
+        center_layout = QHBoxLayout()
+        bottom_layout = QHBoxLayout()
+
+        # image label
+        self.label_1 = QLabel(self)
+        center_layout.addWidget(self.label_1, alignment=Qt.AlignCenter)
+
+        # load image
+        self.pixmap = QPixmap()
+
+        # adding image to label
+        self.label_1.setPixmap(self.pixmap)
+
+        # resize label to image size
+        self.label_1.resize(self.pixmap.width(), self.pixmap.height())
+
+        # image name label
+        self.label_2 = QLabel(self)
+        bottom_layout.addWidget(self.label_2, alignment=Qt.AlignCenter)
+        self.label_2.setStyleSheet("color: blue")
+        self.label_2.setAlignment(Qt.AlignCenter)
+
+        self.button_1 = QPushButton('Exit', self)
+        bottom_layout.addWidget(self.button_1, alignment=Qt.AlignRight)
+        self.button_1.clicked.connect(self.quit)
+
+        self.button_2 = QPushButton('Previous Slice', self)
+        top_layout.addWidget(self.button_2, alignment=Qt.AlignCenter)
+        self.button_2.clicked.connect(self.prev_image)
+
+        self.button_3 = QPushButton('Next Slice', self)
+        top_layout.addWidget(self.button_3, alignment=Qt.AlignCenter)
+        self.button_3.clicked.connect(self.next_image)
+
+        self.button_4 = QPushButton('Clear', self)
+        top_layout.addWidget(self.clear_rect, alignment=Qt.AlignCenter)
+
+        self.button_5 = QPushButton('   Draw box/Click Box  ', self)
+        top_layout.addWidget(self.button_5, alignment=Qt.AlignCenter)
+
+        top_layout.addStretch()
+
+        self.button_6 = QPushButton(' Next Volume ', self)
+        top_layout.addWidget(self.button_6, alignment=Qt.AlignRight)
+        self.button_6.clicked.connect(lambda: [self.timer(), self.save_bboxes_df(),
+                                                        self.get_next_studySeries(), ])
+
+        self.button_6 = QPushButton(' Previous Volume ', self)
+        top_layout.addWidget(self.button_6, alignment=Qt.AlignRight)
+        self.button_6.clicked.connect(lambda: [self.timer(), self.save_bboxes_df(),
+                                                        self.get_previous_studySeries(), ])
+
+        self.button_7 = QPushButton('     Save    ', self)
+        top_layout.addWidget(self.button_3, alignment=Qt.AlignCenter)
+        self.button_3.clicked.connect(self.safe_csv)
+
+
+        main_layout.addLayout(top_layout)
+        main_layout.addStretch()
+        main_layout.addLayout(center_layout)
+        main_layout.addStretch()
+        main_layout.addLayout(bottom_layout)
+
+
+        self.canvas = tk.Canvas(self)
+
+        frame = tk.Frame(self)
+
+        frame.pack(side=tk.TOP, fill=tk.BOTH)
+
+        top_frame_text = tk.Frame(self)
+        top_frame_text.pack(side="top", fill="y")
+
+        # This is everything for the button placement
+        top_frame = tk.Frame(self)
+        bottom_frame = tk.Frame(self)
+        image_frame = tk.Frame(self)
+        top_frame.pack(side="top", fill="x")
+        bottom_frame.pack(side="bottom", fill="x")
+        image_frame.pack(side="top", fill="both", expand=True)
+
+
+
+
+
+        # variable for radio button choice
+        v = tk.IntVar()
+
+
+        # click box
+        pb = tk.Radiobutton(top_frame,
+                            text="Click Box",
+                            padx=20,
+                            variable=v,
+                            command=self._run_clicked_box,
+                            value=1)
+        pb.pack(side="left")
+
+        # draw box
+        tpb = tk.Radiobutton(top_frame,
+                             text="Draw box",
+                             padx=20,
+                             variable=v,
+                             command=self._run_click_and_drag_box,
+                             value=2)
+        tpb.pack(side="left")
+
+        # from tkinter import font
+        # def_font = font.Font(family='clean')
+        # print()
+        # print('font families')
+        # print(font.families())
+
+        # button for displayed image name (study, series, slice)
+        #def_font = ('Times', '25', 'bold italic')
+        #self.image_name = tk.Label(top_frame_text, text="", height=3, width=120, fg="red", font=def_font)
+        def_font = ('Times', '20', 'italic')
+        self.image_name = tk.Label(top_frame_text, text="", height=1, width=130, fg="red", font=def_font)
+
+        self.image_name.pack(side="bottom")
+
+        self.canvas.focus_set()
+        # # frame.focus_set()
+
+        self.dragging = False
+
+        self.canvas.pack()
+
+        ## ATTENTION -- this call MUST be there
+        # call the display of first volume
+        self.show_first_studySeries()
+
+        # to add up and down keyboard clicks
+        self.canvas.bind('<Up>', self.up_arrow_to_move_to_previous_volume)
+        self.canvas.bind('<Down>', self.down_arrow_to_move_to_next_volume)
+
+        # to add left and right keyboard clicks
+        self.canvas.bind('<Right>', self.next_image)
+        self.canvas.bind('<Left>', self.prev_image)
+
+        # scrolling with mouse wheel
+        self.canvas.bind("<MouseWheel>", self.MouseWheelHandler)
+        self.canvas.bind("<Button-4>", self.MouseWheelHandler)
+        self.canvas.bind("<Button-5>", self.MouseWheelHandler)
