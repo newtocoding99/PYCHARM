@@ -61,7 +61,7 @@ pd_study_series_num = 'studyFoldNum_seriesNum'
 ### =====================================================================================================================================================
 ### =====================================================================================================================================================
 
-class App(QWidget):
+class MainWindow(QWidget):
 
     def __init__(self, ffp_csv, master=None):
 
@@ -223,6 +223,15 @@ class App(QWidget):
         top_layout.addWidget(self.button_3, alignment=Qt.AlignCenter)
         self.button_3.clicked.connect(self.safe_csv)
 
+        self.rb1 = QRadioButton("Click Box")
+        self.rb1.toggled.connect(lambda: self._run_clicked_box())
+        top_layout.addWidget(self.rb1, alignment=Qt.AlignCenter)
+
+        self.rb2 = QRadioButton("Draw Box")
+        self.rb2.toggled.connect(lambda: self._run_click_and_drag_box())
+        top_layout.addWidget(self.rb2, alignment=Qt.AlignCenter)
+
+        self.image_name = QLabel("")
 
         main_layout.addLayout(top_layout)
         main_layout.addStretch()
@@ -231,48 +240,47 @@ class App(QWidget):
         main_layout.addLayout(bottom_layout)
 
 
-        self.canvas = tk.Canvas(self)
+        #self.canvas = tk.Canvas(self)
 
-        frame = tk.Frame(self)
+        #frame = tk.Frame(self)
 
-        frame.pack(side=tk.TOP, fill=tk.BOTH)
+        #frame.pack(side=tk.TOP, fill=tk.BOTH)
 
-        top_frame_text = tk.Frame(self)
-        top_frame_text.pack(side="top", fill="y")
+        #top_frame_text = tk.Frame(self)
+        #top_frame_text.pack(side="top", fill="y")
 
         # This is everything for the button placement
-        top_frame = tk.Frame(self)
-        bottom_frame = tk.Frame(self)
-        image_frame = tk.Frame(self)
-        top_frame.pack(side="top", fill="x")
-        bottom_frame.pack(side="bottom", fill="x")
-        image_frame.pack(side="top", fill="both", expand=True)
-
-
+        #top_frame = tk.Frame(self)
+        #bottom_frame = tk.Frame(self)
+        #image_frame = tk.Frame(self)
+        #top_frame.pack(side="top", fill="x")
+        #bottom_frame.pack(side="bottom", fill="x")
+        #image_frame.pack(side="top", fill="both", expand=True)
 
 
 
         # variable for radio button choice
-        v = tk.IntVar()
+        #    help
+        #v = tk.IntVar()
 
 
         # click box
-        pb = tk.Radiobutton(top_frame,
-                            text="Click Box",
-                            padx=20,
-                            variable=v,
-                            command=self._run_clicked_box,
-                            value=1)
-        pb.pack(side="left")
+        #pb = tk.Radiobutton(top_frame,
+                            #text="Click Box",
+                            #padx=20,
+                            #variable=v,
+                            #command=self._run_clicked_box,
+                            #value=1)
+        #pb.pack(side="left")
 
         # draw box
-        tpb = tk.Radiobutton(top_frame,
-                             text="Draw box",
-                             padx=20,
-                             variable=v,
-                             command=self._run_click_and_drag_box,
-                             value=2)
-        tpb.pack(side="left")
+        #tpb = tk.Radiobutton(top_frame,
+                             #text="Draw box",
+                             #padx=20,
+                             #variable=v,
+                             #command=self._run_click_and_drag_box,
+                             #value=2)
+        #tpb.pack(side="left")
 
         # from tkinter import font
         # def_font = font.Font(family='clean')
@@ -283,10 +291,11 @@ class App(QWidget):
         # button for displayed image name (study, series, slice)
         #def_font = ('Times', '25', 'bold italic')
         #self.image_name = tk.Label(top_frame_text, text="", height=3, width=120, fg="red", font=def_font)
-        def_font = ('Times', '20', 'italic')
-        self.image_name = tk.Label(top_frame_text, text="", height=1, width=130, fg="red", font=def_font)
 
-        self.image_name.pack(side="bottom")
+        #def_font = ('Times', '20', 'italic')
+        #self.image_name = tk.Label(top_frame_text, text="", height=1, width=130, fg="red", font=def_font)
+
+        #self.image_name.pack(side="bottom")
 
         self.canvas.focus_set()
         # # frame.focus_set()
@@ -311,3 +320,1366 @@ class App(QWidget):
         self.canvas.bind("<MouseWheel>", self.MouseWheelHandler)
         self.canvas.bind("<Button-4>", self.MouseWheelHandler)
         self.canvas.bind("<Button-5>", self.MouseWheelHandler)
+
+        """
+        # Overall goals
+        -- Evaluate performance of LN detection algorithm 
+            -- Is AI aiding their workflow?
+            -- How sensitive is AI detection? 
+        -- Simultaneously annotate missed LN 
+
+        # Experiment design
+        -- Rads find LN without AI first 
+            -- measure time  
+        -- Rads then find LN with AI help
+            -- measure time with help
+        -- Divide exp in half: half-1 is without AI support, and half-2 is with AI support
+            -- after washout period, half-1 is with AI support and half-2 is without AI support 
+            -- Time the radiologists during the evaluation/annotation for each volume 
+
+        # Experiment Design Questions
+        -- Do radiologists annotate during without-AI phase only, or do they do along with-AI help?
+        -- How is time going to be measured? For each volume? for With-AI too? 
+            -- Have "start" button to prompt User to start exp and this times them?
+        -- How many radiologists are needed? Exp 1: 24 rads, exp 2: 20 rads
+        -- Washout period -- good period for Ron? 1 month? 
+
+
+        # Implementation questions
+        -- Where does the GUI exist? Do we need to create an .exe and send it to them? 
+
+        """
+
+        """
+        ## =================================================
+        # TODO:
+        - Add label to annotated LN/lesion (generic label)
+        - Clear predictions (toggle it)
+        - Continuous annotation/evaluation? Or all in one shot? Gotta ask Ron
+        - Do the experiment in chunks?  
+        - Compute IOU for pred vs GT and color the bboxes based on overlap? 
+
+        - Ask Ron if <1cm LN are important -- 0.8cm, 1cm 
+            - ann 8cm and larger, but report 1cm as 
+            - Add measuring tool for sizing the LN - add scale bar 
+            - this will help rads identify important LN
+        - Add `undo` button to the code (Jianfei)
+        - Add legend to the gui -- cyan box is for ground truth, red box is for predictions (green for true pos when clicked on), yellow for dragged box, 
+
+        - What about the wrong GT annotated by Grace? We should not consider them and ask Rads to reannotate what they think is a LN. 
+
+        - Record of 10-12 LN locations + zones (another drop list/check box for para-, common-, internal-, gastro-, infra-, )
+        - `not a LN` checkbox for misannotated LN
+        - One volume every 5 mins, 12 per hour -
+        - Add report with color code for LN mention (plus point?) 
+        - Add entire volume 
+        - 
+
+        """
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def read_csv(self, ffp_csv):
+
+        # read the csv file
+        df = pd.read_csv(ffp_csv)
+
+        return df
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def create_master_dict_from_df(self, df):
+        """
+        # make new dictionary with unique study/series as keys
+        # in each studySeries, put the slice number
+        # get the rows for that slice and place it in the dict
+        """
+        # initialize master dictionary
+        d_master_studySeriesSlice = {}
+
+        print('======================')
+        print('Get unique studySeries numbers')
+
+        # get the unique studySeries number
+        self.uniq_studySeries = df[pd_study_series_num].unique()
+
+        # print('uniq_studySeries', '\t num:', len(self.uniq_studySeries))
+        # print(self.uniq_studySeries)
+
+        print('======================')
+        print('Initialize study + series + slice numbers')
+
+        # iterate over each unique studySeries number
+        for curr_uniq_studySeries in self.uniq_studySeries:
+
+            # get the df rows matching current studySeries number
+            df_curr_studySeries = df[df[pd_study_series_num] == curr_uniq_studySeries]
+
+            # get unique slices annotated in current studySeries number (these slices are in csv file)
+            uniq_slices_annotated_in_curr_studySeries = df_curr_studySeries[SLICE_NUM].unique()
+
+            # number of slices in current volume
+            num_slices_curr_volume = df_curr_studySeries['numSlices'].unique()[0]  # only one element, so take it
+
+            # print('curr_uniq_studySeries:', curr_uniq_studySeries)
+            # print('num_slices_curr_volume:', num_slices_curr_volume)
+
+            # create empty entry for studySeries number
+            d_master_studySeriesSlice[curr_uniq_studySeries] = {}
+
+            # store the uniquely annotated slics
+            d_master_studySeriesSlice[curr_uniq_studySeries][
+                'uniq_slices_annotated_in_curr_studySeries'] = uniq_slices_annotated_in_curr_studySeries
+
+            for curr_slice_idx in range(num_slices_curr_volume):
+
+                # create empty entry for slice number in current studySeries
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx] = {}
+
+                # create entries for filename and paths
+                temp_fn_image = str(curr_uniq_studySeries) + '_' + str(curr_slice_idx)  # filename (no ext)
+                temp_fp_image = IMAGES_PATH  # file path
+                temp_ffp_image = IMAGES_PATH + '/' + temp_fn_image + '.png'  # full file path (with ext)
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['fn_image'] = temp_fn_image
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['fp_image'] = temp_fp_image
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['ffp_image'] = temp_ffp_image
+
+                # # empty image entries
+                # d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['image_2.5D'] = None
+                # d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['image'] = None
+
+                # image dims entries
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['orig_dims_wh'] = None
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['rescaled_dims_wh'] = None
+
+                # aspect ratio (after resizing to fit gui window)
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['aspect_ratio'] = None
+
+                # ATTENTION
+                # non-ground-truth slice can have an object to be annotated by dragged box
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['dragged_bboxes'] = []
+                d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['scaled_dragged_bboxes'] = []
+
+                # if slice is annotated, then store data specific to annotated slices
+                if curr_slice_idx in uniq_slices_annotated_in_curr_studySeries:
+                    # get slice rows for current studySeries number
+                    curr_studySeries_slice_df_rows = df_curr_studySeries[
+                        df_curr_studySeries[SLICE_NUM] == curr_slice_idx]
+                    curr_studySeries_slice_df_rows = curr_studySeries_slice_df_rows.reset_index(drop=True)
+
+                    # add columns to store click/drag bboxes
+                    curr_studySeries_slice_df_rows['clicked_bboxes'] = -1
+                    curr_studySeries_slice_df_rows['clicked_bboxes'] = curr_studySeries_slice_df_rows[
+                        'clicked_bboxes'].astype(object)
+                    curr_studySeries_slice_df_rows['dragged_bboxes'] = -1
+                    curr_studySeries_slice_df_rows['dragged_bboxes'] = curr_studySeries_slice_df_rows[
+                        'dragged_bboxes'].astype(object)
+
+                    # create entry
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx][
+                        'df_rows'] = curr_studySeries_slice_df_rows
+
+                    # # empty image entry for gt overlay
+                    # d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['image_with_GT_bbox_overlay'] = None
+
+                    # bboxes entries - GT
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['gt_bboxes'] = None
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['scaled_gt_bboxes'] = None
+                    # bboxes entries - pred
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['pred_bboxes'] = None
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['scaled_pred_bboxes'] = None
+
+                    # ATTENTION
+                    # bboxes entries - click box
+                    # only ground-truth slices will have a predicted box to be clicked
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['clicked_bboxes'] = []
+                    d_master_studySeriesSlice[curr_uniq_studySeries][curr_slice_idx]['scaled_clicked_bboxes'] = []
+
+        print('Initialized entries for studySeries -> slice -> image/gt_bbox/pred_bbox/click_bbox/drawn_bbox')
+
+        return d_master_studySeriesSlice
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def show_first_studySeries(self):
+
+        print('==================================================================')
+        print('==================================================================')
+        print('==================================================================')
+
+        # get the current studySeries number
+        self.curr_studySeries_name = self.uniq_studySeries[self.curr_studySeries_idx]
+
+        # get dict of all slices for current studySeries volume
+        d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[self.curr_studySeries_name]
+
+        # get the slice keys (including the uniq_slices_annotated_in_curr_studySeries)
+        t_keys = list(d_curr_studySeries_ALL_slices.keys())
+
+        # get all slice keys (remove the uniq_slices_annotated_in_curr_studySeries)
+        self.list_slice_keys_in_curr_studySeries = t_keys[1:]
+
+        # keep indicies of unique annotated slices
+        self.curr_studySeries_idx_unique_annotated_slices = d_curr_studySeries_ALL_slices[t_keys[0]]
+
+        # reset slice idx to middle slice in current studySeries
+        self.curr_studySeries_curr_slice_idx = len(self.list_slice_keys_in_curr_studySeries) // 2
+
+        print(
+            'current study:', str(self.curr_studySeries_name.split('_')[0]), \
+            'series:', str(self.curr_studySeries_name.split('_')[1])
+        )
+
+        # keep dict of all slices in current studySeries volume
+        self.d_curr_studySeries_ALL_slices = d_curr_studySeries_ALL_slices
+
+        # load the slice
+        self.load_slice()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def get_previous_studySeries(self, event=None):
+
+        print('==================================================================')
+        print('==================================================================')
+        print('==================================================================')
+
+        # decrease counter of studySeries
+        self.curr_studySeries_idx -= 1
+
+        # reset to first volume if over bounds
+        if self.curr_studySeries_idx < 0:
+            # need to show first volume
+            self.curr_studySeries_idx = 0
+
+        # get the current studySeries number
+        self.curr_studySeries_name = self.uniq_studySeries[self.curr_studySeries_idx]
+
+        # get dict of all slices for current studySeries volume
+        d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[self.curr_studySeries_name]
+
+        # get the slice keys (including the uniq_slices_annotated_in_curr_studySeries)
+        t_keys = list(d_curr_studySeries_ALL_slices.keys())
+
+        # get all slice keys (remove the uniq_slices_annotated_in_curr_studySeries)
+        self.list_slice_keys_in_curr_studySeries = t_keys[1:]
+
+        # keep indicies of unique annotated slices
+        self.curr_studySeries_idx_unique_annotated_slices = d_curr_studySeries_ALL_slices[t_keys[0]]
+
+        # reset slice idx to middle slice in current studySeries
+        self.curr_studySeries_curr_slice_idx = len(self.list_slice_keys_in_curr_studySeries) // 2
+
+        print(
+            'current study:', str(self.curr_studySeries_name.split('_')[0]), \
+            'series:', str(self.curr_studySeries_name.split('_')[1])
+        )
+
+        # keep dict of all slices in current studySeries volume
+        self.d_curr_studySeries_ALL_slices = d_curr_studySeries_ALL_slices
+
+        # load the slice
+        self.load_slice()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def get_next_studySeries(self, event=None):
+
+        print('==================================================================')
+        print('==================================================================')
+        print('==================================================================')
+
+        # increment counter of studySeries
+        self.curr_studySeries_idx += 1
+
+        # number of total studies
+        num_total_studySeries = len(self.uniq_studySeries)
+
+        # reset to last volume if over bounds
+        if self.curr_studySeries_idx > num_total_studySeries:
+            # reset to last volume
+            self.curr_studySeries_idx = num_total_studySeries - 1
+
+        # get the current studySeries number
+        self.curr_studySeries_name = self.uniq_studySeries[self.curr_studySeries_idx]
+
+        # get dict of all slices for current studySeries volume
+        d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[self.curr_studySeries_name]
+
+        # get the slice keys (including the uniq_slices_annotated_in_curr_studySeries)
+        t_keys = list(d_curr_studySeries_ALL_slices.keys())
+
+        # get all slice keys (remove the uniq_slices_annotated_in_curr_studySeries)
+        self.list_slice_keys_in_curr_studySeries = t_keys[1:]
+
+        # keep indicies of unique annotated slices
+        self.curr_studySeries_idx_unique_annotated_slices = d_curr_studySeries_ALL_slices[t_keys[0]]
+
+        # reset slice idx to middle slice in current studySeries
+        self.curr_studySeries_curr_slice_idx = len(self.list_slice_keys_in_curr_studySeries) // 2
+
+        print(
+            'current study:', str(self.curr_studySeries_name.split('_')[0]), \
+            'series:', str(self.curr_studySeries_name.split('_')[1])
+        )
+
+        # keep dict of all slices in current studySeries volume
+        self.d_curr_studySeries_ALL_slices = d_curr_studySeries_ALL_slices
+
+        # load the slice
+        self.load_slice()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def timer(self):
+
+        # get current time
+        now = dt.datetime.today()
+
+        # current volume - compute time elapsed
+        time_elapsed = now - self.curr_vol_time
+
+        self.curr_vol_eval_time = time_elapsed
+
+        print()
+        print('time taken to read volume:', time_elapsed)
+        print()
+
+        # reset the time for current volume to count for next volume
+        self.curr_vol_time = now
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def down_arrow_to_move_to_next_volume(self, event=None):
+
+        self.timer()
+        self.save_bboxes_df()
+        self.get_next_studySeries()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def up_arrow_to_move_to_previous_volume(self, event=None):
+
+        self.save_bboxes_df()
+        self.get_previous_studySeries()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def extract_gt_bboxes_df_to_dict(
+            self,
+            d_curr_studySeries_curr_slice
+
+    ):
+        """
+            Extract all the GT bboxes
+            The current slice might have many GT annotations, so combine and store them all
+        """
+
+        # extract dataframe rows with annotations for current slice in studySeries
+        df = d_curr_studySeries_curr_slice['df_rows']
+
+        # number of GT bboxes for curr slice
+        num_gt_bboxes_curr_slice = df.shape[0]
+
+        # empty bboxes
+        all_gt_bboxes = []
+
+        # extract GT annotations
+        # current slice might have many rows with annotations, combine all of them in a list
+        for gt_bbox_idx in range(num_gt_bboxes_curr_slice):
+            # extract row with GT bboxes from df
+            correct_bbox = df.at[gt_bbox_idx, 'correct_flip_bbox'].split(',')
+            # get bbox coordinates
+            correct_bbox_x1 = int(correct_bbox[0])
+            correct_bbox_y1 = int(correct_bbox[1])
+            correct_bbox_x2 = int(correct_bbox[2])
+            correct_bbox_y2 = int(correct_bbox[3])
+            # make list
+            bbox_coordinates = [correct_bbox_x1, correct_bbox_y1, correct_bbox_x2, correct_bbox_y2]
+            # store bbox coordinates
+            all_gt_bboxes.append(bbox_coordinates)
+
+        # keep gt bboxes
+        d_curr_studySeries_curr_slice['gt_bboxes'] = all_gt_bboxes
+
+        return d_curr_studySeries_curr_slice
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def extract_pred_bboxes_df_to_dict(
+            self,
+            d_curr_studySeries_curr_slice
+
+    ):
+        """
+            Extract all the predicted bboxes by the model
+        """
+
+        # extract dataframe rows with predictions for current slice in current studySeries
+        df = d_curr_studySeries_curr_slice['df_rows']
+
+        # get the predictions
+        correct_pred_bbox = df.at[0, 'testSet_modelPred_bboxes']
+
+        # print('pred_bboxes:')
+        # print(correct_pred_bbox)
+        # print('orig type:', type(correct_pred_bbox))
+        # p_split_strip = [x.strip() for x in correct_pred_bbox.split()]
+        # print('p_split_strip')
+        # print(p_split_strip)
+        # d = ','.join(p_split_strip)
+        # d = d.replace('[,', '[')
+        # print('d')
+        # print(d)
+        # print('type d:', type(d))
+        # dl = ast.literal_eval(d)
+        # print('dl')
+        # print(dl)
+        # print('type dl:', type(dl))
+
+        # convert them from string to list
+        # remove all spaces and join again
+        p_split_strip = [x.strip() for x in correct_pred_bbox.split()]
+        d = ','.join(p_split_strip)
+        d = d.replace('[,', '[')
+        d = d.replace('[[,', '[[')
+        d = d.replace(',]', ']')
+        d = d.replace(',]]', ']]')
+        # evaluate as list of lists
+        dl = ast.literal_eval(d)
+
+        # # extract prediction bboxes from df
+        # # pred bboxes will only be on first row of the df
+        # pred_bboxes =  [
+        #                 [10, 10, 60, 60],
+        #                 [50, 50, 100, 100],
+        #                 [128, 128, 178, 178],
+        #                 [150, 150, 175, 175],
+        #                 [155, 155, 170, 170],
+
+        #                 ] #df.at[0, 'pred_bboxes'].split(',')
+
+        pred_bboxes = dl
+
+        # keep predicted bboxes
+        d_curr_studySeries_curr_slice['pred_bboxes'] = pred_bboxes
+
+        return d_curr_studySeries_curr_slice
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def draw_bboxes_tkinter(
+            self,
+            data_dict,
+            from_key='scaled_dragged_bboxes',
+            color='',
+            line_width=2,
+    ):
+
+        """
+        # draw the bboxes using tkinter
+        """
+
+        # extract bboxes
+        _bboxes = data_dict[from_key]
+
+        for rect_idx, coordinates in enumerate(_bboxes):
+            # get the coordinates
+            l = coordinates[0]
+            t = coordinates[1]
+            r = coordinates[2]
+            b = coordinates[3]
+
+            # tag for rect
+            tag_to_use = 'dummy_rect' + str(rect_idx)
+            # self.canvas.delete(tag_to_use)
+
+            # draw rect
+            self.rect = self.canvas.create_rectangle(l, t, r, b, outline=color, width=line_width)
+            # self.rect = self.canvas.create_rectangle(l, t, r, b, tag = tag_to_use, outline = color, width = line_width)
+
+            self.canvas.pack(expand=1)
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def scale_bboxes_with_aspect_ratio(
+            self,
+            data_dict,
+            from_key='gt_bboxes',
+            to_key='scaled_gt_bboxes',
+            scaling_ratio=1
+    ):
+        # get coordinates list
+        _bboxes = data_dict[from_key]
+
+        #
+        scaled_bboxes = []
+
+        # scale each bbox
+        for curr_bbox in _bboxes:
+            # get bbox coordinates and scale
+            bbox_x1 = int(int(curr_bbox[0]) * scaling_ratio)
+            bbox_y1 = int(int(curr_bbox[1]) * scaling_ratio)
+            bbox_x2 = int(int(curr_bbox[2]) * scaling_ratio)
+            bbox_y2 = int(int(curr_bbox[3]) * scaling_ratio)
+            # make list
+            scaled_coordinates = [bbox_x1, bbox_y1, bbox_x2, bbox_y2]
+            # keep scaled coordinates
+            scaled_bboxes.append(scaled_coordinates)
+
+        data_dict[to_key] = scaled_bboxes
+
+        return data_dict
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def get_dict_curr_slice_in_curr_studySeries(self):
+
+        # get the name of the slice
+        self.curr_studySeries_curr_slice_key = self.list_slice_keys_in_curr_studySeries[
+            self.curr_studySeries_curr_slice_idx]
+
+        # print('\n\n')
+        # print(self.d_curr_studySeries_ALL_slices)
+        # print('self.curr_studySeries_curr_slice_key:', self.curr_studySeries_curr_slice_key)
+
+        # extract dict of current slice in current studySeries
+        d_curr_studySeries_curr_slice = self.d_curr_studySeries_ALL_slices[self.curr_studySeries_curr_slice_key]
+
+        # check if we have annotations/predictions for current slice
+        if self.curr_studySeries_curr_slice_key in self.curr_studySeries_idx_unique_annotated_slices:
+            # extract gt bboxes from df and store in dict
+            d_curr_studySeries_curr_slice = self.extract_gt_bboxes_df_to_dict(
+                d_curr_studySeries_curr_slice,
+            )
+
+            # extract predicted bboxes from df and store in dict
+            d_curr_studySeries_curr_slice = self.extract_pred_bboxes_df_to_dict(
+                d_curr_studySeries_curr_slice,
+            )
+
+        return d_curr_studySeries_curr_slice
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def load_slice(self):
+
+        """
+        ## =================================================
+        ## dict of current slice in current studySeries
+        ## ATTENTION - scaling of boxes DOES NOT happen here (scroll and see below)
+        """
+        # extract dict of current slice in current studySeries
+        self.d_curr_studySeries_curr_slice = self.get_dict_curr_slice_in_curr_studySeries()
+        # make reference to dict
+        d_curr_studySeries_curr_slice = self.d_curr_studySeries_curr_slice
+
+        """
+        ## =================================================
+        ## Display volume/slice counter, study/series/slice name 
+        """
+        # total slices
+        num_slices_in_current_vol = len(self.list_slice_keys_in_curr_studySeries)
+
+        # study + series + slice string
+        str_study_series_slice = 'V: ' + str(self.curr_studySeries_idx + 1) + '/' + str(len(self.uniq_studySeries)) + \
+                                 '   S: ' + str(self.curr_studySeries_curr_slice_idx + 1) + '/' + str(
+            num_slices_in_current_vol) + \
+                                 '\t Study: ' + str(self.curr_studySeries_name.split('_')[0]) + \
+                                 ' Series: ' + str(self.curr_studySeries_name.split('_')[1]) + \
+                                 ' Slice: ' + str(self.curr_studySeries_curr_slice_key)
+
+        print(
+            'Current Study:', str(self.curr_studySeries_name.split('_')[0]), \
+            'Series:', str(self.curr_studySeries_name.split('_')[1]), \
+            'Slice:', str(self.curr_studySeries_curr_slice_key)
+        )
+
+        """
+        ## =================================================
+        ## read 3-channel slice
+        """
+
+        # get the image_name label
+        file_name = d_curr_studySeries_curr_slice['fn_image'] + '.png'
+
+        # get the path to the image on disk
+        ffp_image = d_curr_studySeries_curr_slice['ffp_image']
+
+        # read the image
+        input_image = PIL.Image.open(ffp_image)
+
+        """
+        ## =================================================
+        ## expand slice dims for display
+        ## resize while preserving aspect ratio
+        """
+        # original input width and height
+        orig_dims_wh = (int(input_image.width), int(input_image.height))
+
+        # # original height, width
+        # height, width = int(input_image.height), int(input_image.width)
+
+        # get new height
+        new_height = MAX_HEIGHT
+
+        # find aspect ratio (based on height)
+        ratio = new_height / input_image.height
+
+        # scale width by aspect ratio
+        height, width = int(MAX_HEIGHT), int(input_image.width * ratio)
+
+        # resize image
+        input_image = input_image.resize((width, height))
+
+        # resized width and height
+        rescaled_dims_wh = (width, height)
+
+        """
+        ## =================================================
+        ## extract middle slice and make RGB
+        """
+
+        # get numpy array
+        dummy_image = np.asarray(input_image)
+
+        # extract middle slice
+        middle_slice = dummy_image[:, :, 1]
+
+        # make 3-channel RGB image - copy middle slice into this
+        actual_image = np.zeros((height, width, 3), dtype=np.uint8)
+        actual_image[:, :, 0] = middle_slice.copy()
+        actual_image[:, :, 1] = middle_slice.copy()
+        actual_image[:, :, 2] = middle_slice.copy()
+
+        # RGB image with GT bboxes
+        actual_image_with_GTbbox = actual_image.copy()
+
+        """
+        ## =================================================
+        ## make PIL image from numpy
+        """
+
+        # make PIL image from numpy
+        actual_pil_image = PIL.Image.fromarray(actual_image_with_GTbbox)
+        # make image to display
+        display_image = PIL.ImageTk.PhotoImage(actual_pil_image)
+
+        """
+        ## =================================================
+        ## Scale bboxes by aspect_ratio
+        """
+
+        # check if we have annotations/predictions for current slice
+        if self.curr_studySeries_curr_slice_key in self.curr_studySeries_idx_unique_annotated_slices:
+            # scale bboxes with aspect_ratio
+            d_curr_studySeries_curr_slice = self.scale_bboxes_with_aspect_ratio(
+                d_curr_studySeries_curr_slice,
+                from_key='gt_bboxes',
+                to_key='scaled_gt_bboxes',
+                scaling_ratio=ratio
+            )
+
+            # scale bboxes with aspect_ratio
+            d_curr_studySeries_curr_slice = self.scale_bboxes_with_aspect_ratio(
+                d_curr_studySeries_curr_slice,
+                from_key='pred_bboxes',
+                to_key='scaled_pred_bboxes',
+                scaling_ratio=ratio
+            )
+
+        """
+        ## =================================================
+        ## things to set for dict/df
+        """
+        # do this to preserve copy of image -- otherwise it does not show up on canvas
+        # d_curr_studySeries_curr_slice['image_with_GT_bbox_overlay'] = display_image
+        self.image_with_GT_bbox_overlay = display_image
+
+        # keep original dimensions w/h
+        d_curr_studySeries_curr_slice['orig_dims_wh'] = orig_dims_wh
+        # keep rescaled dimensions w/h
+        d_curr_studySeries_curr_slice['rescaled_dims_wh'] = rescaled_dims_wh
+
+        # keep aspect ratio to get back original dims
+        d_curr_studySeries_curr_slice['aspect_ratio'] = ratio
+
+        """
+        ## =================================================
+        ## things to set on gui
+        """
+
+        # calculate the new h and w
+        self.canvas.config(width=width, height=height)
+
+        # set name on gui for display
+        self.image_name.config(text=str_study_series_slice)
+        # self.image_name.config(text=file_name)
+
+        # set the image to canvas
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=display_image)
+
+        # empty contents of drag box container
+        self.current_drag_box = []
+
+        """
+        ## =================================================
+        ## Draw bboxes on RGB 
+        ## Order matters - draw the image on the frame, and then draw the bboxes on top of it 
+        """
+
+        # check if we have annotations/predictions for current slice
+        if self.curr_studySeries_curr_slice_key in self.curr_studySeries_idx_unique_annotated_slices:
+            #self.draw_bboxes_tkinter(
+                #data_dict=d_curr_studySeries_curr_slice,
+                #from_key='scaled_gt_bboxes',
+                #color=self.gt_color_cyan,
+                #line_width=self.thickness,
+            #)
+
+            self.draw_bboxes_tkinter(
+                data_dict=d_curr_studySeries_curr_slice,
+                from_key='scaled_pred_bboxes',
+                color=self.pred_color_red,
+                line_width=self.thickness,
+            )
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def redraw_bboxes_on_FBKey(
+            self,
+            data_dict,
+            from_key='scaled_dragged_bboxes',
+            color='',
+            line_width=2,
+            input_tag="box",
+    ):
+
+        """
+        # redraw the bboxes on forward/backward click/key-press
+        """
+
+        # extract bboxes
+        _bboxes = data_dict[from_key]
+
+        for rect_idx, coordinates in enumerate(_bboxes):
+            # get the coordinates
+            l = coordinates[0]
+            t = coordinates[1]
+            r = coordinates[2]
+            b = coordinates[3]
+
+            # tag for rect
+            tag_to_use = input_tag + str(rect_idx)
+            # self.canvas.delete(tag_to_use)
+
+            # draw rect
+            self.rect = self.canvas.create_rectangle(l, t, r, b, outline=color, width=line_width)
+
+            self.canvas.pack()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def next_image(self, event=None):
+
+        # increment slice counter
+        self.curr_studySeries_curr_slice_idx += 1
+
+        # get number of slices in current volume
+        num_slices_in_current_vol = len(self.list_slice_keys_in_curr_studySeries)
+
+        # reset to last slice if over bounds
+        if self.curr_studySeries_curr_slice_idx > num_slices_in_current_vol - 1:
+            # reset to last slice
+            self.curr_studySeries_curr_slice_idx = num_slices_in_current_vol - 1
+
+        # get the slice in current studySeries number
+        self.load_slice()
+
+        # check if we have annotations/predictions for current slice
+        if self.curr_studySeries_curr_slice_key in self.curr_studySeries_idx_unique_annotated_slices:
+            """
+            ## =================================================
+            ## redraw boxes on forward/backward key press 
+            ## if forward/backward key is pressed, then load_slice() will only draw the bboxes (if on annotation slice)
+            ## but if we already clicked/drew a few boxes, we need to redraw them here
+            """
+
+            # redraw boxes on forward/backward key press
+            self.redraw_bboxes_on_FBKey(
+                data_dict=self.d_curr_studySeries_curr_slice,
+                from_key='scaled_clicked_bboxes',
+                color=self.click_to_good_color_green,
+                line_width=2,
+                input_tag="click_box_",
+            )
+
+            self.redraw_bboxes_on_FBKey(
+                self.d_curr_studySeries_curr_slice,
+                from_key='scaled_dragged_bboxes',
+                color=self.drag_box_color_gold,
+                line_width=2,
+                input_tag="drag_box_",
+            )
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def prev_image(self, event=None):
+
+        # decrease slice counter
+        self.curr_studySeries_curr_slice_idx -= 1
+
+        # reset to first slice if over bounds
+        if self.curr_studySeries_curr_slice_idx < 0:
+            # need to show first slice
+            self.curr_studySeries_curr_slice_idx = 0
+
+        # get the slice in current studySeries number
+        self.load_slice()
+
+        # check if we have annotations/predictions for current slice
+        if self.curr_studySeries_curr_slice_key in self.curr_studySeries_idx_unique_annotated_slices:
+            """
+            ## =================================================
+            ## redraw boxes on forward/backward key press 
+            ## if forward/backward key is pressed, then load_slice() will only draw the bboxes (if on annotation slice)
+            ## but if we already clicked/drew a few boxes, we need to redraw them here
+            """
+
+            self.redraw_bboxes_on_FBKey(
+                data_dict=self.d_curr_studySeries_curr_slice,
+                from_key='scaled_clicked_bboxes',
+                color=self.click_to_good_color_green,
+                line_width=2,
+                input_tag="click_box_",
+            )
+
+            self.redraw_bboxes_on_FBKey(
+                self.d_curr_studySeries_curr_slice,
+                from_key='scaled_dragged_bboxes',
+                color=self.drag_box_color_gold,
+                line_width=2,
+                input_tag="drag_box_",
+            )
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def _run_clicked_box(self):
+
+        self.canvas.bind("<Button-1>", self.clicked_evt)
+        self.canvas.delete('drag_box')
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def clicked_evt(self, evt):
+        """
+        # this is for all the correct coordinates in ground_truth_bbox to have a box display upon click of the perimeter
+        """
+
+        # make ref to current slice in current study series
+        d_curr_studySeries_curr_slice = self.d_curr_studySeries_curr_slice
+
+        # get click coordinates
+        x, y = evt.x, evt.y
+
+        # extract scaled prediction bboxes
+        scaled_pred_bboxes = d_curr_studySeries_curr_slice['scaled_pred_bboxes']
+        # print("scaled_pred_bboxes", scaled_pred_bboxes)
+
+        # make sure we have atleast one bbox
+        if scaled_pred_bboxes is not None:
+
+            for cIdx, coordinates in enumerate(scaled_pred_bboxes):
+
+                # get the coordinates
+                l = coordinates[0]
+                t = coordinates[1]
+                r = coordinates[2]
+                b = coordinates[3]
+
+                # check bounds
+                left_or_right_line = ((l - 4) <= x <= (l + 4) or (r - 4) <= x <= (r + 4)) and (t - 4) <= y <= (b + 4)
+                bottom_or_top_line = ((t - 4) <= y <= (t + 4) or (b - 4) <= y <= (b + 4)) and (l - 4) <= x <= (r + 4)
+
+                # if within bounds
+                if left_or_right_line or bottom_or_top_line:
+
+                    """
+                    ## =================================================
+                    # draw clicked bbox in chosen color (red ---> green)
+                    """
+
+                    # draw rect
+                    self.rect = self.canvas.create_rectangle(l, t, r, b, outline=self.click_to_good_color_green,
+                                                             width=self.thickness)
+                    self.canvas.pack(expand=1)
+
+                    """
+                    ## =================================================
+                    # store the clicked bbox coordinates in dict
+                    """
+
+                    # store the scaled clicked bbox in dict
+                    d_curr_studySeries_curr_slice['scaled_clicked_bboxes'].append(coordinates)
+                    # self.d_curr_studySeries_curr_slice['scaled_clicked_bboxes'].append(coordinates)
+
+                    # get the unscaled original pred bbox coordinates based on index -- this is bbox that has now been clicked and deemed "good" prediction
+                    orig_pred_2_clicked_good_bbox = d_curr_studySeries_curr_slice['pred_bboxes'][cIdx]
+                    # print('orig_pred_2_clicked_good_bbox:', orig_pred_2_clicked_good_bbox)
+
+                    # add clicked good bbox to dict storage
+                    d_curr_studySeries_curr_slice['clicked_bboxes'].append(orig_pred_2_clicked_good_bbox)
+                    # self.d_curr_studySeries_curr_slice['clicked_bboxes'].append(orig_pred_2_clicked_good_bbox)
+
+                    # update the dataframe
+                    # extract dataframe for current slice
+                    df_curr_studySeries_curr_slice = d_curr_studySeries_curr_slice['df_rows']
+                    # extract current list of clicked bboxes
+                    curr_slice_clicked_bboxes = d_curr_studySeries_curr_slice['clicked_bboxes']
+                    # store dragged_bboxes in df
+                    if len(curr_slice_clicked_bboxes) > 0:
+                        # store dragged_bboxes in df
+                        df_curr_studySeries_curr_slice.at[0, 'clicked_bboxes'] = curr_slice_clicked_bboxes
+                    else:
+                        df_curr_studySeries_curr_slice.at[0, 'clicked_bboxes'] = -1
+
+                    # print
+                    if len(d_curr_studySeries_curr_slice['clicked_bboxes']) > 0:
+                        # print('current bboxes in :')
+                        print(
+                            f'current CLICKED bboxes in studySeries {self.curr_studySeries_name} slice {self.curr_studySeries_curr_slice_key}:')
+                        for x in d_curr_studySeries_curr_slice['clicked_bboxes']:
+                            print(x)
+
+                    break
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def _run_click_and_drag_box(self):
+
+        self.canvas.bind("<ButtonPress-1>", self.mouse_down_evt)
+        self.canvas.bind("<ButtonRelease-1>", self.mouse_up_evt)
+        self.canvas.bind('<Motion>', self.mouse_move_evt)
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def mouse_down_evt(self, evt):
+
+        # note that dragging started
+        self.dragging = True
+
+        # get the start position of mouse as it starts to drag
+        x, y = evt.x, evt.y
+
+        # newest click/drag bbox coordinates
+        new_clickDrag_bbox_coordinates = [x, y, None, None]
+
+        # add newest bbox to list
+        self.current_drag_box.append(new_clickDrag_bbox_coordinates)
+
+        # draw rect
+        self.rect = self.canvas.create_rectangle(x, y, x + 1, y + 1, outline=self.drag_box_color_gold,
+                                                 width=self.thickness)
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def mouse_move_evt(self, evt):
+
+        if self.dragging:
+            # get current mouse cursor position
+            x, y = evt.x, evt.y
+
+            # get the latest (newest) bbox coordinates
+            latest_bbox_coordinates = self.current_drag_box[-1]
+            # update end position
+            latest_bbox_coordinates[2] = x
+            latest_bbox_coordinates[3] = y
+
+            # update rect on canvas
+            self.canvas.coords(self.rect, latest_bbox_coordinates[0], latest_bbox_coordinates[1], x, y)
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def mouse_up_evt(self, evt):
+
+        if self.dragging:
+
+            # stop dragging
+            self.dragging = False
+
+            # get current mouse cursor position
+            x, y = evt.x, evt.y
+
+            # get the latest (newest) bbox coordinates
+            latest_bbox_coordinates = self.current_drag_box[-1]
+            # update end position
+            latest_bbox_coordinates[2] = x
+            latest_bbox_coordinates[3] = y
+
+            """
+            ## =================================================
+            # store the dragged bbox coordinates in dict
+            """
+
+            # make ref to current slice in current study series
+            d_curr_studySeries_curr_slice = self.d_curr_studySeries_curr_slice
+
+            # get scaled final dragged box
+            coordinates = latest_bbox_coordinates
+
+            # unscale the final bbox
+            unscaled_coordinates = self.unscale_bbox(coordinates, d_curr_studySeries_curr_slice['aspect_ratio'])
+
+            # store the unscaled dragged bbox
+            d_curr_studySeries_curr_slice['dragged_bboxes'].append(unscaled_coordinates)
+            # self.d_curr_studySeries_curr_slice['dragged_bboxes'].append(unscaled_coordinates)
+            # store the scaled dragged bbox in dict
+            d_curr_studySeries_curr_slice['scaled_dragged_bboxes'].append(coordinates)
+            # self.d_curr_studySeries_curr_slice['scaled_dragged_bboxes'].append(coordinates)
+
+            # update the dataframe
+            # extract dataframe for current slice
+            df_curr_studySeries_curr_slice = d_curr_studySeries_curr_slice['df_rows']
+            # extract current list of dragged bboxes
+            curr_slice_dragged_bboxes = d_curr_studySeries_curr_slice['dragged_bboxes']
+            # store dragged_bboxes in df
+            if len(curr_slice_dragged_bboxes) > 0:
+                # store dragged_bboxes in df
+                df_curr_studySeries_curr_slice.at[0, 'dragged_bboxes'] = curr_slice_dragged_bboxes
+            else:
+                df_curr_studySeries_curr_slice.at[0, 'dragged_bboxes'] = -1
+
+            # print
+            if len(d_curr_studySeries_curr_slice['scaled_dragged_bboxes']) > 0:
+                # print('current bboxes in :')
+                print(
+                    f'current DRAGGED bboxes in studySeries {self.curr_studySeries_name} slice {self.curr_studySeries_curr_slice_key}:')
+                for x, unscaled_x in zip(d_curr_studySeries_curr_slice['scaled_dragged_bboxes'],
+                                         d_curr_studySeries_curr_slice['dragged_bboxes']):
+                    print('scaled bbox:', x, '-->    unscaled bbox:', unscaled_x)
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def MouseWheelHandler(self, event):
+
+        # if scrolling backward, show previous image
+        if event.num == 5 or event.delta < 0:
+            # show previous image
+            self.prev_image()
+        else:
+            # show next image
+            self.next_image()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def unscale_bbox(
+            self,
+            scaled_bbox,
+            scaling_ratio=1
+    ):
+
+        unscaled_bbox = copy.deepcopy(scaled_bbox)
+
+        unscaled_bbox[0] /= scaling_ratio
+        unscaled_bbox[1] /= scaling_ratio
+        unscaled_bbox[2] /= scaling_ratio
+        unscaled_bbox[3] /= scaling_ratio
+
+        unscaled_bbox = [int(x) for x in unscaled_bbox]
+
+        return unscaled_bbox
+
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+    # ### =====================================================================================================================================================
+
+    def clear_rect(self):
+
+        # clear the clicked boxes
+        self.d_curr_studySeries_curr_slice['scaled_clicked_bboxes'] = []
+        self.d_curr_studySeries_curr_slice['clicked_bboxes'] = []
+
+        # clear the dragged boxes
+        self.current_drag_box = []
+        self.d_curr_studySeries_curr_slice['scaled_dragged_bboxes'] = []
+        self.d_curr_studySeries_curr_slice['dragged_bboxes'] = []
+
+        # reload the slice
+        self.load_slice()
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def save_bboxes_df(self):
+
+        """
+        Put the clicked and dragged bounding boxes for each slice in the current studySeries in a pandas dataframe
+        """
+
+        # get dict of all slices for current studySeries volume
+        d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[self.curr_studySeries_name]
+
+        # extract the slices with annotations
+        uniq_slices_annotated_in_curr_studySeries = d_curr_studySeries_ALL_slices[
+            'uniq_slices_annotated_in_curr_studySeries']
+
+        # iterate over annotated slices
+        for curr_ann_slice_idx in uniq_slices_annotated_in_curr_studySeries:
+
+            # get the current slice dict
+            d_curr_studySeries_curr_slice = d_curr_studySeries_ALL_slices[curr_ann_slice_idx]
+
+            # print('d_curr_studySeries_curr_slice')
+            # print(d_curr_studySeries_curr_slice)
+
+            # extract dataframe for current slice
+            df_curr_studySeries_curr_slice = d_curr_studySeries_curr_slice['df_rows']
+
+            # add columns to store timer
+            df_curr_studySeries_curr_slice['vol_eval_time_seconds'] = self.curr_vol_eval_time
+
+            # extract list of clicked bboxes
+            curr_slice_clicked_bboxes = d_curr_studySeries_curr_slice['clicked_bboxes']
+
+            # extract list of dragged bboxes
+            curr_slice_dragged_bboxes = d_curr_studySeries_curr_slice['dragged_bboxes']
+
+            # store clicked_bboxes in df
+            if len(curr_slice_clicked_bboxes) > 0:
+                # store clicked_bboxes in df
+                df_curr_studySeries_curr_slice.at[0, 'clicked_bboxes'] = curr_slice_clicked_bboxes
+            else:
+                df_curr_studySeries_curr_slice.at[0, 'clicked_bboxes'] = -1
+
+            # store dragged_bboxes in df
+            if len(curr_slice_dragged_bboxes) > 0:
+                # store dragged_bboxes in df
+                df_curr_studySeries_curr_slice.at[0, 'dragged_bboxes'] = curr_slice_dragged_bboxes
+            else:
+                df_curr_studySeries_curr_slice.at[0, 'dragged_bboxes'] = -1
+
+            # print('df_rows')
+            # print(df_curr_studySeries_curr_slice)
+
+            # print('clicked_bboxes')
+            # print(curr_slice_clicked_bboxes)
+
+            # print('dragged_bboxes')
+            # print(curr_slice_dragged_bboxes)
+
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+    ### =====================================================================================================================================================
+
+    def save_csv(self):
+
+        """
+        Put the clicked and dragged bounding boxes for each slice in the current studySeries in a pandas dataframe
+        """
+
+        # get current s/min/hour
+        currentSecond = dt.datetime.now().second
+        currentMinute = dt.datetime.now().minute
+        currentHour = dt.datetime.now().hour
+
+        months = ["Unknown",
+                  "January",
+                  "Febuary",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December"]
+
+        # get current day/month/year
+        currentDay = dt.datetime.now().day
+        currentMonth = months[dt.datetime.now().month]
+        currentYear = dt.datetime.now().year
+
+        # print(currentDay, currentMonth, currentYear)
+        # print(currentHour, currentMinute, currentSecond)
+
+        # make string of data + time
+        dateTime_str = str(currentYear) + currentMonth[:3] + str(currentDay) + '_' + str(currentHour) + 'h_' + str(
+            currentMinute) + 'm_' + str(currentSecond) + 's'
+        # print(dateTime_str)
+
+        # edit current csv filename to add date + time
+        filename, file_ext = fn_csv.split('.')
+        # update with date + time
+        fn_save_csv = filename + '_' + dateTime_str + '.' + file_ext
+
+        # create full path to csv file to save
+        ffp_save_csv = ffp_root_csv + fn_save_csv
+
+        print('fn_save_csv:', fn_save_csv)
+        print('ffp_save_csv:', ffp_save_csv)
+
+        """
+        ## =================================================
+        If it is last volume and user has pressed `Save` button but not `Next Volume`, 
+        then call timer() function to get eval time for last volume 
+        then reset time 
+        """
+
+        # number of total studies
+        num_total_studySeries = len(self.uniq_studySeries)
+
+        print('self.curr_studySeries_idx:', self.curr_studySeries_idx)
+        print('num_total_studySeries:', num_total_studySeries)
+
+        # are we on last volume
+        if self.curr_studySeries_idx == num_total_studySeries - 1:
+            # call timer function
+            self.timer()
+
+        """
+        ## =================================================
+        Code to put all the dataframes for each slice together 
+        """
+        concatenated_list = []
+
+        # iterate over each unique studySeries number
+        for curr_studySeries_idx, curr_uniq_studySeries in enumerate(self.uniq_studySeries):
+
+            # get dict of all slices for current studySeries volume
+            d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[curr_uniq_studySeries]
+
+            # extract the slices with annotations
+            uniq_slices_annotated_in_curr_studySeries = d_curr_studySeries_ALL_slices[
+                'uniq_slices_annotated_in_curr_studySeries']
+
+            # iterate over annotated slices
+            for curr_ann_slice_idx in uniq_slices_annotated_in_curr_studySeries:
+
+                # get the current slice dict
+                d_curr_studySeries_curr_slice = d_curr_studySeries_ALL_slices[curr_ann_slice_idx]
+
+                # extract df for current slice
+                df_curr_studySeries_curr_slice = d_curr_studySeries_curr_slice['df_rows']
+
+                """
+                If it is last volume and user has pressed `Save` button but not `Next Volume`, 
+                then call timer() function to get eval time for last volume 
+                then reset time 
+                """
+
+                # are we on last volume?
+                if curr_studySeries_idx == num_total_studySeries - 1:
+                    # add columns to store timer
+                    df_curr_studySeries_curr_slice['vol_eval_time_seconds'] = self.curr_vol_eval_time
+
+                # append df
+                concatenated_list.append(df_curr_studySeries_curr_slice)
+
+        # concatenate all dfs
+        df = pd.concat(concatenated_list)
+        df = df.reset_index(drop=True)
+
+        # dump final df to disk
+        df.to_csv(ffp_save_csv, encoding='utf-8')
+
+        # print(df)
+
+        """
+        ## =================================================
+        Test 
+        """
+        # # iterate over each unique studySeries number
+        # for curr_uniq_studySeries in self.uniq_studySeries:
+
+        #     # get dict of all slices for current studySeries volume
+        #     d_curr_studySeries_ALL_slices = self.d_master_studySeriesSlice[curr_uniq_studySeries]
+
+        #     # extract the slices with annotations
+        #     uniq_slices_annotated_in_curr_studySeries = d_curr_studySeries_ALL_slices['uniq_slices_annotated_in_curr_studySeries']
+
+        #     # iterate over annotated slices
+        #     for curr_ann_slice_idx in uniq_slices_annotated_in_curr_studySeries:
+
+        #         # get the current slice dict
+        #         d_curr_studySeries_curr_slice = d_curr_studySeries_ALL_slices[curr_ann_slice_idx]
+
+        #         print()
+        #         print('d_curr_studySeries_curr_slice')
+        #         print(d_curr_studySeries_curr_slice)
+        #         print()
+
+
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+### =====================================================================================================================================================
+
+
+
+if __name__ == "__main__":
+    #set_number_to_rows = load_set_numbers_to_rows('/Users/poojapatel/Desktop/Research/DatasetNIH.csv')
+
+    app = QApplication(sys.argv)
+
+    w = MainWindow(ffp_csv)
+    w.show()
+
+    sys.exit(app.exec_())
